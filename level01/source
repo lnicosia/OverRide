@@ -1,0 +1,44 @@
+char *user_name;
+
+int verify_user_pass(byte *param_1)
+{
+	return strcmp(user_name, "admin");
+}
+
+int verify_user_name(void)
+{
+	puts("verifying username....\n");
+	return strcmp(user_name, "dat_wil");
+}
+
+int main(void)
+{
+	undefined4 main_ret;
+	int iVar2;
+	undefined4 buf [76];
+	int ret;
+
+	bzero(buf, 32);
+	puts("********* ADMIN LOGIN PROMPT *********");
+	printf("Enter Username: ");
+	fgets(user_name, 256, stdin);
+	ret = verify_user_name();
+	if (ret == 0) {
+		puts("Enter Password: ");
+		fgets(buf, 100, stdin);
+		ret = verify_user_pass(buf);
+		if ((ret == 0) || (ret != 0)) {
+			puts("nope, incorrect password...\n");
+			main_ret = 1;
+		}
+		else {
+			main_ret = 0;
+		}
+	}
+	else {
+		puts("nope, incorrect username...\n");
+		main_ret = 1;
+	}
+	return main_ret;
+}
+

@@ -1,0 +1,10 @@
+On a un programme qui demande un login et un password
+Le login doit être égal à "dat_wil" pour que le programme continue.
+Le password n'a pas d'importance, que ça match "admin" ou non on exit
+Le premier fgets (celui pour le login) met notre input dans une variable globale, on ne peut rien faire ici, cependant le second (celui pour le password) le met sur la stack du main, jusqu'à 100 bytes.
+Le buffer accueillant l'input ne fait que 76 bytes, on peut donc overflow ici jusqu'à la sauvegarde d'eip du main
+On peut donc exporter un shellcode dans l'env (avec 200 NOP devant pour tomber dessus plus facilement)
+puis écraser la sauvegarde d'eip par une adresse au milieu des NOP. En l'ocurrence je mets pile poil au milieu,
+addr_shellcode+100.
+Ce qui nous donne comme entrée, sachant qu'on doit donner "dat_wil" au premier input pour que le programme ne s'arrête pas:
+cat <(perl -le 'print "dat_wil"'; perl -le 'print "A"x80 . "\x58\xd8\xff\xff"') - | ./level01
