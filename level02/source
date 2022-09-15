@@ -1,0 +1,56 @@
+int main(void)
+{
+	int iVar1;
+	size_t len;
+	long lVar3;
+	undefined8 *puVar4;
+	undefined8 password [14];
+	undefined8 buf2 [6];
+	undefined8 username [12];
+	FILE *f;
+
+	bzero(username, 12);
+	bzero(buf2, 5);
+	bzero(password, 12);
+	f = NULL;
+	f = fopen("/home/users/level03/.pass", "r");
+	if (f == NULL) {
+		fwrite("ERROR: failed to open password file\n", 1, 36 ,stderr);
+		exit(1);
+	}
+	len = fread(buf2, 1, 41, f);
+	len = strcspn(buf2, "\n");
+	buf2[len] = 0;
+	if (len != 41) {
+		fwrite("ERROR: failed to read password file\n", 1, 36, stderr);
+		fwrite("ERROR: failed to read password file\n", 1, 36, stderr);
+		exit(1);
+	}
+	fclose(f);
+
+	puts("===== [ Secure Access System v1.0 ] =====");
+	puts("/***************************************\\");
+	puts("| You must login to access this system. |");
+	puts("\\**************************************/");
+
+	printf("--[ Username: ");
+	fgets(username, 100, stdin);
+	len = strcspn(username, "\n");
+	username[len] = 0;
+
+	printf("--[ Password: ");
+	fgets(password, 100, stdin);
+	len = strcspn(password, "\n");
+	password[len] = 0;
+
+	puts("*****************************************");
+
+	if (strncmp(buf2, password, 41) == 0) {
+		printf("Greetings, %s!\n", username);
+		system("/bin/sh");
+		return 0;
+	}
+	printf(username);
+	puts(" does not have access!");
+	exit(1);
+}
