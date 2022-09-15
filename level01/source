@@ -14,7 +14,6 @@ int verify_user_name(void)
 int main(void)
 {
 	undefined4 main_ret;
-	int iVar2;
 	undefined4 buf [76];
 	int ret;
 
