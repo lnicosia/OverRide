@@ -1,3 +1,4 @@
+-- level01 --
 On a un programme qui demande un login et un password
 Le login doit être égal à "dat_wil" pour que le programme continue.
 Le password n'a pas d'importance, que ça match "admin" ou non on exit
