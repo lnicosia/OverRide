@@ -1,0 +1,20 @@
+-- level09 --
+Ici le programme est en 64 bits et le PIE est activé.
+On a un buffer dans handle_msg() qui est rempli deux fois lors d'entrées utilisateur.
+La première écrit les 41 premiers bytes de l'entrée à l'adresse du buffer + 140.
+La deuxième écrit les N premiers bytes de l'entrée à l'adresse du buffer. N est
+la valeur située à buffer + 180, soit le dernier byte donné lors de la première
+entrée.
+La sauvegarde de rip de handle_msg() est située à 200 bytes du buffer. On peut donc
+l'atteindre avec un overflow. Il faut écrire 40 bytes + la taille lors de la première entrée,
+puis 200 bytes + 8 pour rip, donc 0xd0. Enfin la valeur qu'on veut mettre dans la sauvegarde de rip.
+
+Maintenant qu'on peut écraser une adresse de retour, il faut trouver quoi y mettre. Heureusement,
+wil a gentiment laissé une fonction secret_backdoor() qui appelle system() en prenant une entrée
+utilisateur comme paramètre.
+secret_backdoor est située à 2188/0x88c bytes de l'adresse de base du binaire.
+Comme l'ASLR n'est pas activé, on peut lancer une fois le binaire dans gdb ou utiliser ldd
+pour trouver l'adresse de base du PIE. C'est 0x0000555555554000. Donc secret_backdoor()
+sera située à l'adresse 0x000055555555488c.
+En combinant les 2 premiers inputs et en gardant stdin ouvert, on obtient:
+cat <(python -c 'print "A"*40 + "\xd0"'; python -c 'print "B"*200 + "\x00\x55\x55\x55\x55\x48\x8c"[::-1]'; python -c 'print "/bin/sh"') - | ./level09
