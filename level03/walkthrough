@@ -1,22 +1,20 @@
 -- level03 --
-Dans ce binaire, on demande un entier a l'utilisateur avec scanf(%d).
-Pas d'exploit ici. La fonction decrypt() fait un appel a system("/bin/sh")
+Dans ce binaire, on demande un password à l'utilisateur avec scanf(%d).
+Pas d'exploit ici. Une fonction decrypt() fait un appel a system("/bin/sh")
 si certaines conditions sont respectees.
-On soustrait le nombre entre a 322424845.
-Si le resultat est inferieur a 22, on decrypt() est appelee avec ce dernier
+On soustrait le password/nombre entré à 322424845.
+Si le résultat est inférieur à 22, decrypt() est appelée avec ce résultat
 en parametre, sinon avec une valeur aleatoire.
-Dans decrypt, on XOR chaque caractere de la chaine "Q}|u`sfg~sf{}|a3" avec 
-le parametre de la fonction.
-Si la chaine resultant est egale a "Congratulations!", un shell est ouvert.
-Il faut donc trouver une valeur, forcement inferieure a 22 pour laquelle
+Dans decrypt, on XOR chaque caractère de la chaine "Q}|u`sfg~sf{}|a3" avec 
+le paramètre de la fonction.
+Si la chaîne résultante est égale a "Congratulations!", un shell est ouvert.
+Il faut donc trouver une valeur, forcément inférieure à 22, pour laquelle
 un XOR avec 'Q' donne 'C', un XOR avec '}' donne 'o' etc.
-Comme on donne une seule valeur, il suffit de trouver le resultat pour Q, cela
-doit fonctionner pour tous les caracteres suivants aussi.
 Q en binaire donne     01010001
 C en binaire donne     01000011
 Il faut donc faire 01010001 (Q) ^ 00010010 = 01000011 (C).
-00010010 equivaut a 18 en binaire. C'est bien inferieur a 22, ce sera donc 
-bien notre argument de decrypt() qui sera utilise pour le XOR.
-Il faut donc envoyer 322424845 - 18 soit 322424827 en entree.
+00010010 equivaut a 18 en binaire. C'est bien inférieur à 22.
+Il faut donc que decrypt() soit appelée avec 18 en paramètre.
+Pour cela, il faut envoyer 322424845 - 18 soit 322424827 en entrée.
 Cela nous donne en gardant stdin ouvert:
 cat <(python -c 'print "322424827"') - | ./level03

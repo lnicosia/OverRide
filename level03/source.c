@@ -9,7 +9,6 @@ int	decrypt(char a1)
 	unsigned int val;
 	char v4[29];
 
-	//v4[17] = __readgsdword(0x14u);
 	strcpy(v4, "Q}|u`sfg~sf{}|a3");
 	val = strlen(v4);
 	for ( i = 0; i < val; ++i )
@@ -55,7 +54,7 @@ int	test(int a1, int a2)
 int	main(int argc, const char **argv)
 {
 	unsigned int val;
-	int nb;
+	int password;
 
 	val = time(0);
 	srand(val);
@@ -63,7 +62,7 @@ int	main(int argc, const char **argv)
 	puts("*\t\tlevel03\t\t**");
 	puts("***********************************");
 	printf("Password:");
-	scanf("%d", &nb);
-	test(nb, 322424845);
+	scanf("%d", &password);
+	test(password, 322424845);
 	return 0;
 }
