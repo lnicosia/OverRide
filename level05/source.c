@@ -5,10 +5,10 @@ int main(int argc, const char **argv, const char **envp)
 
   i = 0;
   fgets(s, 100, stdin);
-  for ( i = 0; i < strlen(s); ++i )
+  for (i = 0; i < strlen(s); ++i)
   {
-    if ( s[i] > 64 && s[i] <= 90 )
-      s[i] ^= 0x20; // Probablement toupper()
+    if (s[i] > 64 && s[i] <= 90)
+      s[i] ^= 0x20; // Probablement tolower()
   }
   printf(s);
   exit(0);
