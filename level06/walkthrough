@@ -2,21 +2,21 @@
 Le stack canary est present, on ne pourra pas executer de shellcode
 De toute maniere, un overflow n'est pas possible. Il y a un seul
 buffer qui est rempli avec un fgets().
-Le programme est relativement simple: on donne une string avec fgets()
-puis un entier avec scanf().
-Une fonction auth(string, entier) va ensuite effectuer des tests sur les 2
-entrees et retourner 0 si c'est bon, 1 sinon.
-Le check est assez simple en code mais complique a apprehender:
+Le programme demande un login puis un serial à l'utilisateur, avec
+respectivement un fgets() puis un scanf().
+Une fonction auth(login, serial) va ensuite effectuer des tests sur les 2
+entrées et retourner 0 si c'est bon, 1 sinon.
+Le check est assez simple en code mais compliqué à appréhender:
 Un entier nb prend pour valeur s[3] ^ 4919 + 6221293.
-Ensuite pour chaque caractere de la chaine on ajoute "(nb ^ s[i]) % 1337.
-Enfin si nb = notre argument passe au scanf, le resultat est bon.
-C'est tres complique de voir l'entree attendu pour obtenir le bon resultat.
-Un call a ptrace empeche le debug grace a gdb. On peut le bypass
+Ensuite pour chaque caractère du login on ajoute (nb ^ login[i]) % 1337 à nb.
+Enfin si nb = notre serial, le résultat est bon.
+C'est très compliqué de voir l'entrée attendue pour obtenir le bon résultat.
+Un call a ptrace empêche le debug dans gdb. On peut le bypass
 en changeant la valeur d'eax apres le call et afficher la valeur finale de nb
-en fonction de notre premiere entree. Sinon, plus simplement, on peut copier
-le programme et mettre un printf avant le retour... ;)
-Je constate en mettant arbitrairement 30 * "A" que nb vaut 6244567 apres les
-operations. Il ne me reste plus qu'a donner la meme valeur au scanf pour valider
+en fonction de notre premiere entrée. Sinon, plus simplement, on peut copier
+le programme et mettre un printf avant le retour...
+Je constate en mettant arbitrairement 30 * "A" que nb vaut 6244567 après les
+opérations. Il ne me reste plus qu'a donner la même valeur au serial pour valider
 les tests..
 En gardant stdin ouvert, cela donne
 cat <(python -c 'print "B"*30'; python -c 'print "6244567"') - | ./level06

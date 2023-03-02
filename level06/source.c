@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <sys/ptrace.h>
 
-int auth(char *s, int a2)
+int auth(char *s, int serial)
 {
 	int i;
 	int nb;
@@ -29,16 +29,14 @@ int auth(char *s, int a2)
 				return 1;
 			nb += (nb ^ (unsigned int)s[i]) % 1337;
 		}
-		return a2 != nb;
+		return serial != nb;
 	}
 }
-// 80485D0: using guessed type int __cdecl strnlen(_DWORD, _DWORD);
 
-//----- (08048879) --------------------------------------------------------
 int main(int argc, const char **argv)
 {
-	int nb;
-	char s[28];
+	int serial;
+	char login[28];
 	unsigned int v6;
 
 	// Setup stack canary
@@ -46,13 +44,13 @@ int main(int argc, const char **argv)
 	puts("*\t\tlevel06\t\t  *");
 	puts("***********************************");
 	printf("-> Enter Login: ");
-	fgets(s, 32, stdin);
+	fgets(login, 32, stdin);
 	puts("***********************************");
 	puts("***** NEW ACCOUNT DETECTED ********");
 	puts("***********************************");
 	printf("-> Enter Serial: ");
-	scanf("%u", &nb);
-	if (auth(s, nb))
+	scanf("%u", &serial);
+	if (auth(login, serial))
 		return 1;
 	puts("Authenticated!");
 	system("/bin/sh");
