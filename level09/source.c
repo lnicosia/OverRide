@@ -33,7 +33,7 @@ int		set_username(int64_t a1)
 	fgets(s, 128, stdin);
 	for ( i = 0; i <= 40 && s[i]; ++i )
 		*(char *)(a1 + i + 140) = s[i];
-	return printf(">: Welcome, %s", (const char *)(a1 + 140));
+	return printf(">: Welcome, %s", (char *)(a1 + 140));
 }
 
 int		handle_msg()
