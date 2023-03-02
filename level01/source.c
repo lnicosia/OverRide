@@ -1,17 +1,20 @@
-char *user_name;
+#include <string.h>
+#include <stdio.h>
 
-int verify_user_pass()
+char *a_user_name;
+
+int		verify_user_pass()
 {
-	return memcmp(user_name, "admin", 5);
+	return memcmp(a_user_name, "admin", 5);
 }
 
-int verify_user_name()
+int		verify_user_name()
 {
 	puts("verifying username....\n");
-	return memcmp(user_name, "dat_wil", 7);
+	return memcmp(a_user_name, "dat_wil", 7);
 }
 
-int main(void)
+int		main(void)
 {
 	char buf[64];
 	int ret;
