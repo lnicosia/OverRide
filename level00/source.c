@@ -1,20 +1,24 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
 bool main(void)
 
 {
-	int buf [4];
+	int buf;
 
 	puts("***********************************");
 	puts("* \t     -Level00 -\t\t  *");
 	puts("***********************************");
 	printf("Password:");
-	scanf("%d", buf);
-	if (buf[0] != 5276) {
+	scanf("%d", &buf);
+	if (buf != 5276) {
 		puts("\nInvalid Password!");
 	}
 	else {
 		puts("\nAuthenticated!");
 		system("/bin/sh");
 	}
-	return buf[0] != 5276;
+	return buf != 5276;
 }
 
