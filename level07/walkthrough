@@ -1,45 +1,47 @@
 -- level07 --
-Encore un programme avec le stack canary, il sera donc complique de realiser un overflow, cependant la stack reste executable.
-Les args et l'env sont aussi mis a 0 des le debut du main
-Je cherche donc soit un printf mal formate, soit un overflow permettant de faire
-un ret2libc soit un exploit direct.
-Je constate que store_number() prend en parametre le buffer du 
-main. Elle ecrit ensuite a l'adresse du buffer + 4 * l'index donne
+Encore un programme avec le stack canary, il sera donc compliqué de réaliser un overflow, cependant la stack reste executable.
+Les args et l'env sont aussi mis à 0 au début du main
+Je cherche donc soit un printf mal formaté, soit un overflow permettant de faire
+un ret2libc, soit un exploit direct.
+Le programme permet de stocker des nombres à des index donnés par l'utilisateur,
+tout ça dans un buffer placé dans le main.
+Je constate que store_number() prend en paramètre le buffer du 
+main. Elle écrit ensuite à l'adresse du buffer + 4 * l'index donné
 par l'utilisateur. On peut peut etre atteindre des adresses
-interessantes grace a ca
-Le buffer est a l'adresse 0xffffd534
-La difficulte de l'exerice reside dans la protection mise en place sur les indexes
-donnes par l'utilisateur. On ne peut pas envoyer un index divisible par 3.
-Par exemple, on a vite envie d'ecrire sur les sauvegardes d'eip des differentes
+intéressantes grace à ça.
+La difficulté de l'exercice réside dans une protection mise en place sur les indexes
+donnés par l'utilisateur. On ne peut pas envoyer un index divisible par 3.
+Par exemple, on a vite envie d'ecrire sur les sauvegardes d'eip des différentes
 fonctions. Mais peu importe la fonction c'est un index divisible par 3.
-Cependant apres la verif, l'index est multiplie par 4 grace a un shift de 2 bits vers la gauche.
-Cela veut dire que toute valeur > a UINT_MAX / 4 va overflow apres la multiplication.
-On peut tester avec gdb en mettant un breakpoint apres le shift.
+Cependant apres la vérif, l'index, qui est un uint, est multiplié par 4
+grâce à un shift de 2 bits vers la gauche.
+Cela veut dire que toute valeur supérieure à UINT_MAX / 4 va overflow après la multiplication.
+On peut tester avec gdb en mettant un breakpoint après le shift.
 En effet, si on met 01000000000000000000000000000000, soit 0x40000000 ou 1073741824,
 on obtient 0 apres le shift. Hors, on ne devrait pas pouvoir mettre 0 avec le
-check du divisible par 3. En jouant avec cela, on peut donc ecrire a tous les 
-index au lieu de 2 sur 3.
-On peut donc finalement ecrire sur la sauvegarde d'eip du main, situee a 
-0xffffd6fc.
-Le buffer ou l'on ecrit est situe a 0xffffd534.
-Il faut donc ecrire a 0xffffd534-0xffffd6fc = 456 bytes apres l'adresse de base
+check du divisible par 3. On peut donc écrire à l'index 0 avec cette technique
+et aux index 1 et 2 avec la méthode "normale".
+En jouant avec cela, on peut donc écrire à tous les index au lieu de 2 sur 3.
+On peut donc finalement écrire sur la sauvegarde d'eip du main, située à 0xffffd6fc.
+Le buffer où l'on écrit est situé à 0xffffd534.
+Il faut donc ecrire à l'index 0xffffd534-0xffffd6fc = 456 bytes après l'adresse de base
 du buffer.
 Pour cela, soit on donne 456/4 = 114 comme index mais celui-ci est divisble par
-3 donc impossible. Soit une valeur qui donne 456 mais apres l'overflow du au
-bitshift/a la multiplication.  Avec un bitshift calculator online on peut facilement
-trouver. On demarre avec 0x40000000 qui donne 0 puis on augmente.
+3 donc impossible. Soit une valeur qui donne 456 mais apres l'overflow dû au
+bitshift/à la multiplication.  Avec un bitshift calculator online on peut facilement
+trouver. On démarre avec 0x40000000 qui donne 0 puis on augmente.
 0x40000072, soit 1073741938, donnera 456 apres le shift.
-On va ecrire l'adresse de system a cet endroit.
+On va écrire l'adresse de system à cet endroit.
 Adresse de systeme: 0xf7e6aed0, 4159090384
 Il faut ensuite mettre l'adresse de "/bin/sh" 2 adresses plus loin.
 Adresse de "/bin/sh": 0xf7f897ec, 4160264172
-Pour ecrire deux adresses plus loin, soit 0xffffd704 il faut donner un index "normal",
+Pour écrire deux adresses plus loin, soit 0xffffd704 il faut donner un index "normal",
 qui n'overflow pas.
 0xffffd704-0xffffd534 = 464. 464 / 4 = 116. Il faut ecrire a l'index 116
 On entre donc deux fois "store" avec 
 Number: 4159090384
 Index: 1073741938
-Pour ecrire l'adresse de system sur la sauvegarde d'eip du main, puis
+Pour écrire l'adresse de system sur la sauvegarde d'eip du main, puis
 Number: 4160264172
 Index: 116
 Pour ecrire l'adresse de "/bin/sh" deux adresse plus loin.

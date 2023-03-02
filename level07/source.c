@@ -95,26 +95,26 @@ int main(int argc, const char **argv, const char **envp)
 			"----------------------------------------------------\n"
 			"   wil has reserved some storage :>                 \n"
 			"----------------------------------------------------\n");
-	while ( 1 )
+	while (1)
 	{
 		printf("Input command: ");
 		number = 1;
 		fgets(s, 20, stdin);
 		s[strlen(s) - 1] = 0;
-		if ( !memcmp(s, "store", 5) )
+		if (!memcmp(s, "store", 5))
 		{
 			number = store_number((int)v6);
 			goto LABEL_13;
 		}
-		if ( !memcmp(s, "read", 4) )
+		if (!memcmp(s, "read", 4))
 		{
 			number = read_number((int)v6);
 			goto LABEL_13;
 		}
-		if ( !memcmp(s, "quit", 4) )
+		if (!memcmp(s, "quit", 4))
 			return 0;
 LABEL_13:
-		if ( number )
+		if (number)
 			printf(" Failed to do %s command\n", s);
 		else
 			printf(" Completed %s command successfully\n", s);
