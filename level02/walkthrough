@@ -1,18 +1,19 @@
 -- level02 --
-Dans ce binaire on a 2 buffers et fgets proteges, non exploitables,
+Ce programme demande un username et un password à l'utilisateur
+On a 2 buffers et fgets protégés, non exploitables,
 et un printf mal formaté exploitable.
-Il y a deux entrees utilisateur successives qui sont respectivement
-stockees dans deux buffers. Le printf va afficher le second: 'printf(s)'.
+Il y a deux entrées utilisateur successives qui sont respectivement
+stockées dans deux buffers. Le printf va afficher le second: 'printf(s)'.
 Avec son aide, on peut afficher la stack de notre programme.
-On constate que ce qu'on ecrit dans le 2e buffer est accessible
-a la 8e adresse derriere le printf (%8$lX).
-Directement apres le printf, le programme appelle puts() et exit();
+On constate que ce qu'on écrit dans le 2e buffer est accessible
+à la 8e adresse derrière le printf (%8$lX).
+Directement après le printf, le programme appelle puts() et exit();
 Un call a system("/bin/sh") est disponible plus loin dans les instructions.
-On peut donc a l'aide du printf et de %n ecrire a l'endroit ou est stockee
+On peut donc a l'aide du printf et de %n ecrire a l'endroit où est stockée
 l'adresse de puts() dans la Global Offset Table. Ainsi, le programme va jump
 sur ce qu'on veut au lieu de puts().
-L'adresse de puts() est stockee a 0x6011e0, 0x00000000006011e0 en realite
-car le programme est en 64bits. On va remplacer ce qu'il y a a cette adresse
+L'adresse de puts() est stockée à 0x6011e0, 0x00000000006011e0 en realité
+car le programme est en 64bits. On va remplacer ce qu'il y a à cette adresse
 par l'adresse de l'instruction juste avant le call a system() du main
 (pour conserver le setup des arguments du call).
 L'adresse de cette instruction est 0x400a85, soit 0x0000000000400a85.
@@ -21,15 +22,16 @@ Voici donc les bytes que l'on va remplacer avec leur future valeur:
 0x6011e1 - 0x0a
 0x6011e2 - 0x40
 0x6011e3 - 0x0000000000
-On peut dors et deja constituer notre deuxieme input:
+On met donc les adresses qui nous intéressent dans le 2è input qui vont être utilisées
+par ce qu'on met dans le premier input
 python -c 'print "\0\0\0\0\0\x60\x11\xe0"[::-1] + "\0\0\0\0\0\x60\x11\xe1"[::-1] + "\0\0\0\0\0\x60\x11\xe2"[::-1] + "\0\0\0\0\0\x60\x11\xe3"[::-1]')
 Pour le premier input, il faut faire attention a l'ordre car %n va ecrire
-le nombre de caracteres imprimes jusqu'a lui. On va donc ecrire en premier les
+le nombre de caracteres imprimés jusqu'a lui. On doit donc écrire en premier les
 5 bytes qui valent		0 (0x0)		a 0x6011e3, la 11e adresse (%11$n).
 Ensuite celui qui vaut	10 (0x0a)	a 0x6011e1, la 9e adresse (%9$hhn).
 Puis celui qui vaut		64 (0x40)	a 0x6011e2, la 10e adresse (%10$hhn).
 Enfin celui qui vaut	133 (0x85)	a 0x6011e0, la 8e adresse (%8$hhn);
-Il faut aussi compter le nombre de padding a ecrire pour que les %n
+Il faut aussi compter le nombre de padding a écrire pour que les %n
 inscrivent la bonne valeur aux adresses donnees: 0 puis %10d puis %54 (64 - 10)
 puis %69 (133 - 64)
 Ce qui nous donne pour le premier input: 
