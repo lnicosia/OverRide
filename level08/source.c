@@ -47,7 +47,7 @@ int		main(int argc, const char **argv, const char **envp)
 	}
 	strcpy(dest, "./backups/");
 	strncat(dest, argv[1], 99 - strlen(dest));
-	fd = open(dest, 193, 432LL);
+	fd = open(dest, 193, 432);
 	if ( fd < 0 )
 	{
 		printf("ERROR: Failed to open %s%s\n", "./backups/", argv[1]);

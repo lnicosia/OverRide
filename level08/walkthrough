@@ -1,21 +1,24 @@
 -- level08 --
 C'est un programme de logging.
-Il commence par log notre premier argument dans le fichier backups/.log
-Il essaie ensuite d'ouvrir notre premier argument en tant que fichier, et 
-enfin d'ouvrir un fichier dans le dossier backups une fois de plus avec comme 
+Il commence par ouvrir le fichier backups/.log
+Il essaie ensuite d'ouvrir notre premier argument en tant que fichier.
+Enfin il ouvrir un fichier dans le dossier backups avec comme 
 nom notre premier arg. Par exemple si on met "toto", le programme ouvre
 backups/.log, puis ./toto, puis backups/toto
-Si une des trois ouvertures echoue, le programme quitte.
+Si une des trois ouvertures échoue, le programme quitte.
 Sinon, il ecrit notre argument dans backups/.log pour indiquer quel fichier on
-va essayer de log. Il ecrit ensuite le contenu du fichier donne en argument
+va essayer de log. Il ecrit ensuite le contenu du fichier donné en argument
 dans backups/nom_du_fichier
-On constate qu'il y a un snprintf mal formate avec lequel on pourrait afficher
-la stack ou ecrire sur des adresses importantes, cependant je suis tente 
-d'essayer d'ouvrir le mot de passe de level09 directement.
+On constate qu'il y a un snprintf mal formaté avec lequel on pourrait afficher
+la stack ou écrire sur des adresses importantes, cependant je suis tenté
+d'essayer d'ouvrir le mot de passe de level09 (/home/users/level09/) directement.
 Cela ne fonctionne pas car l'ouverture de "backups//home/users/level09/.pass"
-echoue. Effectivement le path est invalide, cependant si on cree simplement un
+échoue. Effectivement le path est invalide, cependant si on crée simplement un
 lien vers le fichier, on peut executer le programme sans soucis. Ainsi, le 
-programme va ouvrir la cible du lien et ecrire son contenu dans backups/nom_du_lien
-Il faut donner les droits d'ecriture dans le repertoire (chmod 755 .) puis
+programme va ouvrir la cible du lien et écrire son contenu dans backups/nom_du_lien.
+(On pourrait aussi faire tout ça dans /tmp et recréer le dossier backups dedans.)
+Il faut donner les droits d'écriture dans le repertoire.
+chmod 755 . -R
 ln -s /home/users/level09/.pass link
 ./level08 link
+cat backups/link
